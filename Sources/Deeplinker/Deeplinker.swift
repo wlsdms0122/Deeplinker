@@ -22,6 +22,7 @@ public protocol DeferredDeeplinkable: Deeplinkable {
 public class Deeplinker: DeferredDeeplinkable {
     // MARK: - Property
     private var deeplinks: [Deeplink] = []
+    private var defaultDeeplink: Deeplink?
     
     private var canHandle: Bool
     private var deferredURL: URL?
@@ -51,8 +52,15 @@ public class Deeplinker: DeferredDeeplinkable {
         }
         
         // Handle first matched deeplink with url.
-        return deeplinks.first { $0.matches(url: url) }?
-            .action(url: url) ?? false
+        let deeplink = deeplinks.first { $0.matches(url: url) }
+        
+        return deeplink?.action(url: url)
+            ?? defaultDeeplink?.action(url: url)
+            ?? false
+    }
+    
+    public func addDefault(action: @escaping Action) {
+        self.defaultDeeplink = Deeplink(pattern: ".*", action: action)
     }
     
     public func addDeeplink(_ deeplink: Deeplink) {
