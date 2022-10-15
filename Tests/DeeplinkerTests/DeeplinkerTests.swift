@@ -21,76 +21,198 @@ final class DeeplinkerTests: XCTestCase {
     }
     
     // MARK: - Test
-    func test_deeplink_should_handle_when_url_matches_pattern() {
+    func test_that_deeplinker_that_added_as_deeplink_should_handle_when_url_matches_pattern() {
         // Given
-        let urls: [URL] = [
-            URL(string: "deeplinker://a/b/c")!,
-            URL(string: "deeplinker://a/b/c/")!,
-            URL(string: "deeplinker://a/b/c/?")!,
-            URL(string: "deeplinker://a/b/c/?d")!,
-            URL(string: "deeplinker://a/b/c/?d=")!,
-            URL(string: "deeplinker://a/b/c/?d=e")!,
-            URL(string: "deeplinker://a/b/c?d")!,
-            URL(string: "deeplinker://a/b/c?d=")!,
-            URL(string: "deeplinker://a/b/c?d=e")!
-        ]
+        let sut = Deeplinker()
+        sut.addDeeplink(Deeplink(url: "deeplinker://a/b") { _, _, _ in true }!)
         
-        let deeplinker = Deeplinker(canHandle: true)
-        
-        deeplinker.addURL("deeplinker://a/b/c") { _, _, _ in }
-        
-        // When
-        let result = urls.allSatisfy { deeplinker.handle(url: $0) }
-        
-        // Then
-        XCTAssertTrue(result)
-    }
-    
-    func test_deeplink_should_not_handle_when_url_not_matches_pattern() {
-        // Given
-        let urls: [URL] = [
-            URL(string: "scheme://a/b/c")!,
+        let urls = [
             URL(string: "deeplinker://a/b")!,
+            URL(string: "deeplinker://a/b?")!,
+            URL(string: "deeplinker://a/b?c")!,
+            URL(string: "deeplinker://a/b?c=")!,
+            URL(string: "deeplinker://a/b?c=d")!,
             URL(string: "deeplinker://a/b/")!,
-            URL(string: "deeplinker://a/b/c/d")!,
-            URL(string: "deeplinker://d/e/f")!
+            URL(string: "deeplinker://a/b/?")!,
+            URL(string: "deeplinker://a/b/?c")!,
+            URL(string: "deeplinker://a/b/?c=")!,
+            URL(string: "deeplinker://a/b/?c=d")!
         ]
         
-        let deeplinker = Deeplinker(canHandle: true)
-        
-        deeplinker.addURL("deeplinker://a/b/c") { _, _, _ in }
-        
-        // When
-        let result = urls.allSatisfy { !deeplinker.handle(url: $0) }
-        
-        // Then
-        XCTAssertTrue(result)
+        urls.forEach {
+            // When
+            let result = sut.handle(url: $0)
+            
+            // Then
+            XCTAssertTrue(
+                result,
+                "\($0.absoluteString) was not handled."
+            )
+        }
     }
     
-    func test_deeplink_should_handle_when_url_matches_pattern_with_parameter() {
+    func test_that_deeplinker_that_added_as_url_should_handle_when_url_matches_pattern() {
         // Given
-        let urls: [URL] = [
-            URL(string: "deeplinker://a/b/c")!,
-            URL(string: "deeplinker://a/b/c/")!,
-            URL(string: "deeplinker://a/b/c/?")!,
-            URL(string: "deeplinker://a/b/c/?d")!,
-            URL(string: "deeplinker://a/b/c/?d=")!,
-            URL(string: "deeplinker://a/b/c/?d=e")!,
-            URL(string: "deeplinker://a/b/c?d")!,
-            URL(string: "deeplinker://a/b/c?d=")!,
-            URL(string: "deeplinker://a/b/c?d=e")!
+        let sut = Deeplinker()
+        sut.addURL(URL(string: "deeplinker://a/b")!) { _, _, _ in true }
+        
+        let urls = [
+            URL(string: "deeplinker://a/b")!,
+            URL(string: "deeplinker://a/b?")!,
+            URL(string: "deeplinker://a/b?c")!,
+            URL(string: "deeplinker://a/b?c=")!,
+            URL(string: "deeplinker://a/b?c=d")!,
+            URL(string: "deeplinker://a/b/")!,
+            URL(string: "deeplinker://a/b/?")!,
+            URL(string: "deeplinker://a/b/?c")!,
+            URL(string: "deeplinker://a/b/?c=")!,
+            URL(string: "deeplinker://a/b/?c=d")!
         ]
         
-        let deeplinker = Deeplinker(canHandle: true)
-        
-        deeplinker.addURL("deeplinker://a/b/:path") { _, parameter, _ in
-            XCTAssertNotNil(parameter["path"])
+        urls.forEach {
+            // When
+            let result = sut.handle(url: $0)
+            
+            // Then
+            XCTAssertTrue(
+                result,
+                "\($0.absoluteString) was not handled."
+            )
         }
+    }
+    
+    func test_that_deeplinker_that_added_as_url_string_should_handle_when_url_matches_pattern() {
+        // Given
+        let sut = Deeplinker()
+        sut.addURL("deeplinker://a/b") { _, _, _ in true }
+        
+        let urls = [
+            URL(string: "deeplinker://a/b")!,
+            URL(string: "deeplinker://a/b?")!,
+            URL(string: "deeplinker://a/b?c")!,
+            URL(string: "deeplinker://a/b?c=")!,
+            URL(string: "deeplinker://a/b?c=d")!,
+            URL(string: "deeplinker://a/b/")!,
+            URL(string: "deeplinker://a/b/?")!,
+            URL(string: "deeplinker://a/b/?c")!,
+            URL(string: "deeplinker://a/b/?c=")!,
+            URL(string: "deeplinker://a/b/?c=d")!
+        ]
+        
+        urls.forEach {
+            // When
+            let result = sut.handle(url: $0)
+            
+            // Then
+            XCTAssertTrue(
+                result,
+                "\($0.absoluteString) was not handled."
+            )
+        }
+    }
+    
+    func test_that_deeplinker_should_not_add_deeplink_when_add_invalid_deeplink() {
+        // Given
+        let sut = Deeplinker()
+        
+        let urlString = "a"
+        let url = URL(string: urlString)!
         
         // When
-        let result = urls.allSatisfy { deeplinker.handle(url: $0) }
+        sut.addURL(url) { _, _, _ in true }
+        sut.addURL(urlString) { _, _, _ in true }
+        
+        let result = sut.handle(url: url)
         
         // Then
-        XCTAssertTrue(result)
+        XCTAssertFalse(
+            result,
+            "\(url.absoluteString) was handled."
+        )
+    }
+    
+    func test_that_deeplinker_should_handle_mismatched_url_when_default_deeplink_is_added() {
+        // Given
+        let sut = Deeplinker()
+        let url = URL(string: "deeplinker://a/b")!
+        
+        sut.addDefault { _, _, _ in true }
+        
+        // When
+        let result = sut.handle(url: url)
+        
+        // Then
+        XCTAssertTrue(
+            result,
+            "\(url.absoluteString) was not handled."
+        )
+    }
+    
+    func test_that_deeplinker_should_not_handle_when_deeplink_was_deferred() {
+        // Given
+        let sut = Deeplinker(canHandle: false)
+        sut.addURL("deeplinker://a/b") { _, _, _ in true }
+        
+        let url = URL(string: "deeplinker://a/b")!
+        
+        // When
+        let result = sut.handle(url: url)
+        
+        // Then
+        XCTAssertFalse(
+            result,
+            "Deferred \(url.absoluteString) was handled."
+        )
+    }
+    
+    func test_that_deeplinker_should_handle_deferred_deeplink() {
+        // Given
+        let sut = Deeplinker(canHandle: false)
+        sut.addURL("deeplinker://a/b") { _, _, _ in true }
+        
+        let url = URL(string: "deeplinker://a/b")!
+        
+        let isHandled = sut.handle(url: url)
+        
+        // When
+        let result = sut.handle()
+        
+        // Then
+        XCTAssertFalse(
+            isHandled,
+            "Deferred \(url.absoluteString) was handled."
+        )
+        XCTAssertTrue(
+            result,
+            "Deferred \(url.absoluteString) was not handled."
+        )
+    }
+    
+    func test_that_deeplinker_reset_deferred_deeplink_after_handle() {
+        // Given
+        let sut = Deeplinker(canHandle: false)
+        sut.addURL("deeplinker://a/b") { _, _, _ in true }
+        
+        let url = URL(string: "deeplinker://a/b")!
+        
+        let isHandled = sut.handle(url: url)
+        let isDeferredHandled = sut.handle()
+        
+        // When
+        let result = sut.handle()
+        
+        // Then
+        XCTAssertFalse(
+            isHandled,
+            "Deferred \(url.absoluteString) was handled."
+        )
+        XCTAssertTrue(
+            isDeferredHandled,
+            "Deferred \(url.absoluteString) was not handled."
+        )
+        XCTAssertFalse(
+            result,
+            "Deferred \(url.absoluteString) was not reset."
+        )
     }
 }
