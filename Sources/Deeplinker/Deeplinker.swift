@@ -27,7 +27,7 @@ public class Deeplinker: DeferredDeeplinkable {
     private var deferredURL: URL?
     
     // MARK: - Initializer
-    public init(canHandle: Bool = false) {
+    public init(canHandle: Bool = true) {
         self.canHandle = canHandle
     }
     
