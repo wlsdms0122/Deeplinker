@@ -68,15 +68,25 @@ public class Deeplinker: DeferredDeeplinkable {
     }
     
     public func addURL(
-        _ url: String,
-        action: @escaping (URL, Parameters, Queries) -> Void
+        _ url: URL,
+        action: @escaping Action
     ) {
         guard let deeplink = Deeplink(
             url: url,
             action: action
-        ) else {
-            return
-        }
+        ) else { return }
+        
+        addDeeplink(deeplink)
+    }
+    
+    public func addURL(
+        _ url: String,
+        action: @escaping Action
+    ) {
+        guard let deeplink = Deeplink(
+            url: url,
+            action: action
+        ) else { return }
         
         addDeeplink(deeplink)
     }
