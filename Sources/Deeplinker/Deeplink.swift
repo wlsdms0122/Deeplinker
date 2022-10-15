@@ -7,8 +7,9 @@
 
 import Foundation
 
-public typealias Parameters = [String: String]
-public typealias Queries = [String: String]
+public typealias Parameter = [String: String]
+public typealias Query = [String: String]
+public typealias Action = (URL, Parameter, Query) -> Bool
 
 struct PathParameter {
     let key: String
@@ -17,35 +18,38 @@ struct PathParameter {
 
 public struct Deeplink {
     // MARK: - Property
-    private let url: URL
-    private let action: (URL, Parameters, Queries) -> Void
+    private let action: Action
     
-    private let urlPattern: String
+    private let pattern: String
     private let parameters: [PathParameter]
     
     // MARK: - Initializer
     init?(
         url: URL,
-        action: @escaping (URL, Parameters, Queries) -> Void
+        action: @escaping Action
     ) {
-        guard var urlComponents = URLComponents(
-            url: url,
-            resolvingAgainstBaseURL: false
-        ) else {
-            return nil
+        var urlString = url.absoluteString
+        
+        if let query = url.query {
+            // Remove all queries if exist.
+            urlString = urlString.replace(pattern: "\\?\(query)", with: "")
         }
         
-        // Remove all queries.
-        urlComponents.queryItems = nil
-        guard var urlString = urlComponents.string else { return nil }
-        // Remove last '/' path character.
         if urlString.last == "/" {
+            // Remove last '/' path character.
             urlString.removeLast()
         }
         
-        guard let url = URL(string: urlString) else { return nil }
+        guard let url = URL(string: urlString)
+        else { return nil }
         
-        self.url = url
+        guard !(url.scheme?.isEmpty ?? true)
+              && !(url.host?.isEmpty ?? true)
+        else {
+            // Check url required format.
+            return nil
+        }
+        
         self.action = action
         
         // Store path parameter if pattern exist in url.
@@ -55,7 +59,8 @@ public struct Deeplink {
                 let key = element.match(pattern: "(?<=:).*")
                     .compactMap { element[$0.range] }
                     .first
-                guard let key else { return nil }
+                guard let key
+                else { return nil }
                 
                 return (key, offset)
             }
@@ -69,52 +74,57 @@ public struct Deeplink {
             )
         
         // Add query pattern in url.
-        self.urlPattern = replacedParameterURL + "/?(\\?.*)?"
+        self.pattern = replacedParameterURL + "/?(\\?.*)?"
     }
     
     init?(
         url: String,
-        action: @escaping (URL, Parameters, Queries) -> Void
+        action: @escaping Action
     ) {
-        guard let url = URL(string: url) else { return nil }
+        guard let url = URL(string: url)
+        else { return nil }
+        
         self.init(url: url, action: action)
     }
     
     // MARK: - Public
     /// Check url matches with deeplink pattern.
     public func matches(url: URL) -> Bool {
-        url.absoluteString.matches(pattern: urlPattern)
+        url.absoluteString.matches(pattern: pattern)
     }
     
     /// Perform action about passed url.
     @discardableResult
     public func action(url: URL) -> Bool {
-        guard matches(url: url) else { return false }
-        
-        guard let urlComponents = URLComponents(
-            url: url,
-            resolvingAgainstBaseURL: false
-        ) else {
-            return false
-        }
+        guard matches(url: url)
+        else { return false }
         
         // Get path parameters.
-        let parameters = Dictionary(
+        let parameters = Parameter(
             uniqueKeysWithValues: parameters
                 .map { ($0.key, url.pathComponents[$0.depth]) }
         )
         
         // Get queries.
-        let queries = Dictionary(
-            uniqueKeysWithValues: (urlComponents.queryItems ?? [])
+        let queryComponents = url.query?.split(separator: "&")
+            .map { queryItem -> (key: String?, value: String?) in
+                let query = queryItem.split(separator: "=")
+                    .map { String($0) }
+                return (query[safe: 0], query[safe: 1])
+            } ?? []
+        
+        let queries = Query(
+            uniqueKeysWithValues: queryComponents
                 .compactMap { query -> (String, String)? in
-                    guard let value = query.value else { return nil }
-                    return (query.name, value)
+                    guard let key = query.key,
+                          let value = query.value
+                    else { return nil }
+                    
+                    return (key, value)
                 }
         )
         
-        action(url, parameters, queries)
-        return true
+        return action(url, parameters, queries)
     }
     
     // MARK: - Private
