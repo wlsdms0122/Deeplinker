@@ -87,6 +87,15 @@ public struct Deeplink {
         self.init(url: url, action: action)
     }
     
+    init(
+        pattern: String,
+        action: @escaping Action
+    ) {
+        self.action = action
+        self.pattern = pattern
+        self.parameters = []
+    }
+    
     // MARK: - Public
     /// Check url matches with deeplink pattern.
     public func matches(url: URL) -> Bool {
