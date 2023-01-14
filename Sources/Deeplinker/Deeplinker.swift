@@ -7,18 +7,6 @@
 
 import Foundation
 
-public protocol Deeplinkable {
-    /// Handle deeplink url.
-    @discardableResult
-    func handle(url: URL) -> Bool
-}
-
-public protocol DeferredDeeplinkable: Deeplinkable {
-    /// Handle deferred deeplink url.
-    @discardableResult
-    func handle() -> Bool
-}
-
 public class Deeplinker: DeferredDeeplinkable {
     // MARK: - Property
     private var deeplinks: [Deeplink] = []
@@ -27,36 +15,44 @@ public class Deeplinker: DeferredDeeplinkable {
     private var canHandle: Bool
     private var deferredURL: URL?
     
+    weak var delegate: DeeplinkerDelegate?
+    
     // MARK: - Initializer
     public init(canHandle: Bool = true) {
         self.canHandle = canHandle
     }
     
     // MARK: - Public
-    public func handle() -> Bool {
-        canHandle = true
-        
-        guard let url = deferredURL else { return false }
-        deferredURL = nil
-        
-        // Handle deferred url.
-        return handle(url: url)
-    }
-    
     @discardableResult
     public func handle(url: URL) -> Bool {
         guard canHandle else {
             // Store url until to can handle.
-            deferredURL = url
+            store(url: url)
             return false
         }
         
+        // Reset deferred url.
+        deferredURL = nil
         // Handle first matched deeplink with url.
         let deeplink = deeplinks.first { $0.matches(url: url) }
         
+        guard delegate?.deeplinker(self, shouldHandle: url) ?? true else { return false }
+                
         return deeplink?.action(url: url)
             ?? defaultDeeplink?.action(url: url)
             ?? false
+    }
+    
+    public func handle() -> Bool {
+        canHandle = true
+        
+        guard let url = deferredURL else { return false }
+        // Handle deferred url.
+        return handle(url: url)
+    }
+    
+    public func store(url: URL) {
+        deferredURL = url
     }
     
     public func addDefault(action: @escaping Action) {
