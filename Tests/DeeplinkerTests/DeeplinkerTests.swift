@@ -215,4 +215,45 @@ final class DeeplinkerTests: XCTestCase {
             "Deferred \(url.absoluteString) was not reset."
         )
     }
+    
+    func test_that_deeplinker_should_handle_stored_deeplink() {
+        // Given
+        let sut = Deeplinker()
+        sut.addURL("deeplinker://a/b") { _, _, _ in true }
+        
+        let url = URL(string: "deeplinker://a/b")!
+        
+        // When
+        sut.store(url: url)
+        let result = sut.handle()
+        
+        // Then
+        XCTAssertTrue(
+            result,
+            "Deferred \(url.absoluteString) was not handled."
+        )
+    }
+    
+    func test_that_deeplinker_should_reset_stored_deeplink_after_handle_new_deeplink() {
+        // Given
+        let sut = Deeplinker()
+        sut.addURL("deeplinker://a/b") { _, _, _ in true }
+        
+        let storeURL = URL(string: "deeplinker://a/b")!
+        let newURL = URL(string: "deeplinker://a/c")!
+        
+        // When
+        // Store first deeplink.
+        sut.store(url: storeURL)
+        // Handle new deeplink.
+        sut.handle(url: newURL)
+        // Try to handle stored deeplink.
+        let result = sut.handle()
+        
+        // Then
+        XCTAssertFalse(
+            result,
+            "Deferred \(storeURL.absoluteString) was not reset."
+        )
+    }
 }
