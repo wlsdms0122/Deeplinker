@@ -8,6 +8,7 @@
 import Foundation
 
 public protocol DeeplinkerDelegate: AnyObject {
+    /// Asks the delegate if the deeplinker should handle an deeplink with url.
     func deeplinker(
         _ deeplinker: Deeplinker,
         shouldHandle url: URL
