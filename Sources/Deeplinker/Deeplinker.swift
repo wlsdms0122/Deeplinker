@@ -15,6 +15,8 @@ public class Deeplinker: DeferredDeeplinkable {
     private var canHandle: Bool
     private var deferredURL: URL?
     
+    weak var delegate: DeeplinkerDelegate?
+    
     // MARK: - Initializer
     public init(canHandle: Bool = true) {
         self.canHandle = canHandle
@@ -34,6 +36,8 @@ public class Deeplinker: DeferredDeeplinkable {
         // Handle first matched deeplink with url.
         let deeplink = deeplinks.first { $0.matches(url: url) }
         
+        guard delegate?.deeplinker(self, shouldHandle: url) ?? true else { return false }
+                
         return deeplink?.action(url: url)
             ?? defaultDeeplink?.action(url: url)
             ?? false
