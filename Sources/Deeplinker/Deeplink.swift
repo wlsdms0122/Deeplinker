@@ -24,7 +24,7 @@ public struct Deeplink {
     private let parameters: [PathParameter]
     
     // MARK: - Initializer
-    init?(
+    public init?(
         url: URL,
         action: @escaping Action
     ) {
@@ -77,7 +77,7 @@ public struct Deeplink {
         self.pattern = replacedParameterURL + "/?(\\?.*)?"
     }
     
-    init?(
+    public init?(
         url: String,
         action: @escaping Action
     ) {
@@ -87,7 +87,7 @@ public struct Deeplink {
         self.init(url: url, action: action)
     }
     
-    init(
+    public init(
         pattern: String,
         action: @escaping Action
     ) {
