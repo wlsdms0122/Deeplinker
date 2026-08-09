@@ -5,52 +5,37 @@
 //  Created by jsilver on 2022/09/09.
 //
 
-import XCTest
+import Foundation
+import Testing
 @testable import Deeplinker
 
-final class DeeplinkerTests: XCTestCase {
+@Suite("Deeplinker Tests")
+struct DeeplinkerTests {
     // MARK: - Property
     
     // MARK: - Lifecycle
-    override func setUp() {
-        super.setUp()
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-    }
     
     // MARK: - Test
-    func test_that_deeplinker_that_added_as_deeplink_should_handle_when_url_matches_pattern() {
-        // Given
+    @Test(arguments: [
+        "deeplinker://a/b",
+        "deeplinker://a/b?",
+        "deeplinker://a/b?c",
+        "deeplinker://a/b?c=",
+        "deeplinker://a/b?c=d",
+        "deeplinker://a/b/",
+        "deeplinker://a/b/?",
+        "deeplinker://a/b/?c",
+        "deeplinker://a/b/?c=",
+        "deeplinker://a/b/?c=d"
+    ])
+    func handleURL(url: String) throws {
         let sut = Deeplinker()
-        sut.addDeeplink(Deeplink(url: "deeplinker://a/b") { _, _, _ in true }!)
+        sut.addDeeplink(#require(Deeplink(url: "deeplinker://a/b") { _, _, _ in true }))
         
-        let urls = [
-            URL(string: "deeplinker://a/b")!,
-            URL(string: "deeplinker://a/b?")!,
-            URL(string: "deeplinker://a/b?c")!,
-            URL(string: "deeplinker://a/b?c=")!,
-            URL(string: "deeplinker://a/b?c=d")!,
-            URL(string: "deeplinker://a/b/")!,
-            URL(string: "deeplinker://a/b/?")!,
-            URL(string: "deeplinker://a/b/?c")!,
-            URL(string: "deeplinker://a/b/?c=")!,
-            URL(string: "deeplinker://a/b/?c=d")!
-        ]
-        
-        urls.forEach {
-            // When
-            let result = sut.handle(url: $0)
-            
-            // Then
-            XCTAssertTrue(
-                result,
-                "\($0.absoluteString) was not handled."
-            )
-        }
+        try #expect(sut.handle(url: #require(URL(string: url))))
     }
     
+    @Test
     func test_that_deeplinker_that_added_as_url_should_handle_when_url_matches_pattern() {
         // Given
         let sut = Deeplinker()
@@ -81,6 +66,7 @@ final class DeeplinkerTests: XCTestCase {
         }
     }
     
+    @Test
     func test_that_deeplinker_that_added_as_url_string_should_handle_when_url_matches_pattern() {
         // Given
         let sut = Deeplinker()
@@ -111,6 +97,7 @@ final class DeeplinkerTests: XCTestCase {
         }
     }
     
+    @Test
     func test_that_deeplinker_should_not_add_deeplink_when_add_invalid_deeplink() {
         // Given
         let sut = Deeplinker()
@@ -131,6 +118,7 @@ final class DeeplinkerTests: XCTestCase {
         )
     }
     
+    @Test
     func test_that_deeplinker_should_handle_mismatched_url_when_default_deeplink_is_added() {
         // Given
         let sut = Deeplinker()
@@ -148,6 +136,7 @@ final class DeeplinkerTests: XCTestCase {
         )
     }
     
+    @Test
     func test_that_deeplinker_should_not_handle_when_deeplink_was_deferred() {
         // Given
         let sut = Deeplinker(canHandle: false)
@@ -165,6 +154,7 @@ final class DeeplinkerTests: XCTestCase {
         )
     }
     
+    @Test
     func test_that_deeplinker_should_handle_deferred_deeplink() {
         // Given
         let sut = Deeplinker(canHandle: false)
@@ -188,6 +178,7 @@ final class DeeplinkerTests: XCTestCase {
         )
     }
     
+    @Test
     func test_that_deeplinker_reset_deferred_deeplink_after_handle() {
         // Given
         let sut = Deeplinker(canHandle: false)
@@ -216,6 +207,7 @@ final class DeeplinkerTests: XCTestCase {
         )
     }
     
+    @Test
     func test_that_deeplinker_should_handle_stored_deeplink() {
         // Given
         let sut = Deeplinker()
@@ -234,6 +226,7 @@ final class DeeplinkerTests: XCTestCase {
         )
     }
     
+    @Test
     func test_that_deeplinker_should_reset_stored_deeplink_after_handle_new_deeplink() {
         // Given
         let sut = Deeplinker()
@@ -257,6 +250,7 @@ final class DeeplinkerTests: XCTestCase {
         )
     }
     
+    @Test
     func test_that_deeplinker_should_handle_deeplink_when_set_delegate_with_default_implementation() {
         // Given
         let sut = Deeplinker()
@@ -277,6 +271,7 @@ final class DeeplinkerTests: XCTestCase {
         )
     }
     
+    @Test
     func test_that_deeplinker_should_not_handle_deeplink_when_delegate_should_handle_return_false() {
         // Given
         let sut = Deeplinker()
